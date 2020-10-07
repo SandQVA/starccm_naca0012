@@ -1,0 +1,32 @@
+#!/bin/sh
+#SBATCH --job-name=star_airfoil
+##SBATCH --partition long
+##SBATCH --time=48:00:00
+#SBATCH --partition debug
+#SBATCH --time=02:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=4
+#SBATCH --ntasks-per-node=4
+#SBATCH --begin=now
+##SBATCH --mail-user=sandrine.berger@isae-supaero.fr
+#SBATCH --mail-type=END,FAIL
+
+#module load python/3.7
+#source activate /home/daep/s.berger/.conda/envs/cfd_sureli
+module load starccm/13.04
+
+export OMP_PROC_BIND=true
+export OMP_NUM_THREADS=1
+SLURM_NODEFILE=my_slurm_node.$$
+
+SIM_FILE=naca0012coarse.sim
+MACRO_FILE=macro_externalfiles.java
+
+srun hostname | sort > $SLURM_NODEFILE
+
+echo $SLURM_NTASKS
+
+#starccm -batch macro_externalfiles.java naca0012coarse.sim
+starccm -machinefile $SLURM_NODEFILE -np $SLURM_NTASKS -time -batch $MACRO_FILE $SIM_FILE > output_star_test_$SLURM_JOB_ID
+
+rm $SLURM_NODEFILE
